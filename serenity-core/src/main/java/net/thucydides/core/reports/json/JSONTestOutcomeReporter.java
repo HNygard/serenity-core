@@ -76,8 +76,8 @@ public class JSONTestOutcomeReporter implements AcceptanceTestReporter, Acceptan
             TestOutcome fromJson = jsonConverter.fromJson(report);
             return Optional.fromNullable(fromJson);
         } catch (Throwable e) {
-            LOGGER.warn("this file was not a valid JSON Serenity test report: " + reportFile.getName()
-                        + System.lineSeparator() + e.getMessage());
+            LOGGER.warn("File was not a valid JSON Serenity test report: " + reportFile.getName()
+                        + System.lineSeparator() + "File path: " + reportFile.getAbsolutePath(), e);
             return Optional.absent();
         }
     }
