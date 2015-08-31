@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.List;
 import java.util.Locale;
+import java.lang.RuntimeException;
 
 public class JSONTestOutcomeReporter implements AcceptanceTestReporter, AcceptanceTestLoader {
 
@@ -78,7 +79,7 @@ public class JSONTestOutcomeReporter implements AcceptanceTestReporter, Acceptan
         } catch (Throwable e) {
             LOGGER.warn("File was not a valid JSON Serenity test report: " + reportFile.getName()
                         + System.lineSeparator() + "File path: " + reportFile.getAbsolutePath(), e);
-            return Optional.absent();
+            throw new RuntimeException("Unable to read JSON from test report.", e);
         }
     }
 
