@@ -396,10 +396,12 @@ public class SerenityRunner extends BlockJUnit4ClassRunner {
         getReportService().generateReportsFor(testOutcomeResults);
     }
 
+    protected Map<FrameworkMethod, Integer> retryCountPerMethod = new HashMap<>();
 
     @Override
     protected void runChild(FrameworkMethod method, RunNotifier notifier) {
 
+        retryCountPerMethod.put(method, 0);
         clearMetadataIfRequired();
 
         if (shouldSkipTest(method)) {
@@ -426,6 +428,7 @@ public class SerenityRunner extends BlockJUnit4ClassRunner {
             if (notifier instanceof RetryFilteringRunNotifier) {
                 ((RetryFilteringRunNotifier) notifier).reset();
             }
+            retryCountPerMethod.put(method, attemptCount);
 
             if (attemptCount > 0) {
                 logger.warn(method.getName() + " failed, making attempt " + (attemptCount + 1) + ". Max retries: " + maxRetries);
@@ -628,5 +631,26 @@ public class SerenityRunner extends BlockJUnit4ClassRunner {
 
     public boolean isAWebTest() {
         return TestCaseAnnotations.isWebTest(getTestClass().getJavaClass());
+    }
+
+    /**
+     * Change the testName to include the attempt. If this is not done, Gradle won't be able to run the second attempt.
+     * It will fail since testName is used as unique identifier and there is a requirement that the same test can't run
+     * twice. See details in https://github.com/serenity-bdd/serenity-core/issues/132
+     */
+    @Override
+    protected String testName(FrameworkMethod method) {
+        String testName = super.testName(method);
+        if (!retryCountPerMethod.containsKey(method)) {
+            // -> Not in runChild() yet.
+            return testName;
+        }
+
+        int attemptCount = retryCountPerMethod.get(method);
+        if(attemptCount > 0) {
+            // -> This is not the first attempt, it's a retry.
+            return testName + ", attempt " + (attemptCount + 1);
+        }
+        return testName;
     }
 }
